@@ -383,3 +383,34 @@ export function getStudentAttendanceRate(studentId: string): number {
 export function getUnreadMessageCount(): number {
   return messages.filter(m => !m.isRead).length;
 }
+
+export function getAttendanceDailyBreakdown(classId: string): { date: string; present: number; absent: number; late: number; excused: number }[] {
+  const dates = [...new Set(attendanceRecords.filter(r => r.classId === classId).map(r => r.date))].sort();
+  return dates.map(date => {
+    const records = attendanceRecords.filter(r => r.classId === classId && r.date === date);
+    return {
+      date,
+      present: records.filter(r => r.status === "present").length,
+      absent: records.filter(r => r.status === "absent").length,
+      late: records.filter(r => r.status === "late").length,
+      excused: records.filter(r => r.status === "excused").length,
+    };
+  });
+}
+
+export function getGradeDistributionByClass(classId: string): { A: number; B: number; C: number; D: number; F: number } {
+  const dist = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+  const cls = classes.find(c => c.id === classId);
+  if (!cls) return dist;
+
+  for (const studentId of cls.studentIds) {
+    const avg = getStudentAverageGrade(studentId, classId);
+    if (avg === null) continue;
+    if (avg >= 90) dist.A++;
+    else if (avg >= 80) dist.B++;
+    else if (avg >= 70) dist.C++;
+    else if (avg >= 60) dist.D++;
+    else dist.F++;
+  }
+  return dist;
+}
