@@ -1,0 +1,165 @@
+"use client";
+
+import { useReducer, useEffect, useMemo } from "react";
+import { useClassContext } from "@/contexts/class-context";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { StudentAttendanceRow } from "@/components/attendance/student-attendance-row";
+import { AttendanceSummaryBar } from "@/components/attendance/attendance-summary-bar";
+import { classes, getStudentsByClass, getAttendanceForClassDate } from "@/lib/mock-data";
+import { type AttendanceStatus } from "@/lib/types";
+import { CheckCheck } from "lucide-react";
+
+// ─── Reducer ─────────────────────────────────────────
+interface AttendanceState {
+  records: Record<string, AttendanceStatus>;
+  previousRecords: Record<string, AttendanceStatus> | null;
+  isSaved: boolean;
+}
+
+type AttendanceAction =
+  | { type: "SET_STATUS"; studentId: string; status: AttendanceStatus }
+  | { type: "MARK_ALL_PRESENT"; studentIds: string[] }
+  | { type: "SAVE" }
+  | { type: "UNDO" }
+  | { type: "LOAD"; records: Record<string, AttendanceStatus> };
+
+function attendanceReducer(state: AttendanceState, action: AttendanceAction): AttendanceState {
+  switch (action.type) {
+    case "SET_STATUS":
+      return {
+        ...state,
+        previousRecords: { ...state.records },
+        records: { ...state.records, [action.studentId]: action.status },
+        isSaved: false,
+      };
+    case "MARK_ALL_PRESENT": {
+      const newRecords: Record<string, AttendanceStatus> = {};
+      for (const id of action.studentIds) {
+        newRecords[id] = "present";
+      }
+      return {
+        ...state,
+        previousRecords: { ...state.records },
+        records: newRecords,
+        isSaved: false,
+      };
+    }
+    case "SAVE":
+      return { ...state, isSaved: true, previousRecords: null };
+    case "UNDO":
+      if (!state.previousRecords) return state;
+      return {
+        ...state,
+        records: state.previousRecords,
+        previousRecords: null,
+        isSaved: false,
+      };
+    case "LOAD":
+      return {
+        records: action.records,
+        previousRecords: null,
+        isSaved: false,
+      };
+    default:
+      return state;
+  }
+}
+
+// ─── Component ───────────────────────────────────────
+export default function AttendancePage() {
+  const { selectedClassId, setSelectedClassId, selectedDate, setSelectedDate } = useClassContext();
+
+  const [state, dispatch] = useReducer(attendanceReducer, {
+    records: {},
+    previousRecords: null,
+    isSaved: false,
+  });
+
+  const currentClass = classes.find((c) => c.id === selectedClassId);
+  const studentList = useMemo(() => getStudentsByClass(selectedClassId), [selectedClassId]);
+
+  // Load existing attendance when class/date changes
+  useEffect(() => {
+    const existing = getAttendanceForClassDate(selectedClassId, selectedDate);
+    const records: Record<string, AttendanceStatus> = {};
+    for (const student of studentList) {
+      const record = existing.find((r) => r.studentId === student.id);
+      records[student.id] = record?.status || "present";
+    }
+    dispatch({ type: "LOAD", records });
+  }, [selectedClassId, selectedDate, studentList]);
+
+  const classOptions = classes.map((c) => ({ value: c.id, label: c.name }));
+  const unmarkedCount = studentList.length - Object.keys(state.records).length;
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-4">
+      {/* Selectors */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <Select
+            label="Class"
+            options={classOptions}
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
+          />
+        </div>
+        <div className="flex-1">
+          <label className="mb-1 block text-sm font-medium text-gray-700">Date</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          />
+        </div>
+      </div>
+
+      {/* Bulk action + info */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="success"
+          size="md"
+          onClick={() => dispatch({ type: "MARK_ALL_PRESENT", studentIds: studentList.map((s) => s.id) })}
+        >
+          <CheckCheck className="h-4 w-4" />
+          Mark All Present
+        </Button>
+        <span className="text-sm text-gray-500">
+          {studentList.length} students {currentClass && `in ${currentClass.name}`}
+        </span>
+      </div>
+
+      {/* Student List */}
+      <div className="space-y-1.5">
+        {studentList.map((student, i) => (
+          <StudentAttendanceRow
+            key={student.id}
+            student={student}
+            status={state.records[student.id] || "present"}
+            onChange={(studentId, status) =>
+              dispatch({ type: "SET_STATUS", studentId, status })
+            }
+            index={i}
+          />
+        ))}
+      </div>
+
+      {studentList.length === 0 && (
+        <p className="py-8 text-center text-gray-500">No students in this class.</p>
+      )}
+
+      {/* Summary Bar */}
+      {studentList.length > 0 && (
+        <AttendanceSummaryBar
+          records={state.records}
+          onSave={() => dispatch({ type: "SAVE" })}
+          onUndo={() => dispatch({ type: "UNDO" })}
+          canUndo={state.previousRecords !== null}
+          isSaved={state.isSaved}
+        />
+      )}
+    </div>
+  );
+}
