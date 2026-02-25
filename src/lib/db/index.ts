@@ -20,9 +20,3 @@ export { getMessages, getMessagesForStudent, getUnreadMessageCount } from "./mes
 export { getNotesForStudent } from "./notes";
 export { getActionItems } from "./actions";
 export { getActivities, logActivity } from "./activities";
-export {
-  getAllTeachers,
-  getTeacherByIdAdmin,
-  getTeacherStats,
-  getTeacherDetailStats,
-} from "./teacher-directory";
