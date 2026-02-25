@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   GraduationCap,
   Users,
+  BookOpen,
   MessageCircle,
   BarChart3,
   Settings,
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { href: "/grades", label: "Grades", icon: GraduationCap },
   { href: "/students", label: "Students", icon: Users },
+  { href: "/classes", label: "Classes", icon: BookOpen },
   { href: "/messages", label: "Messages", icon: MessageCircle, badge: true },
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
