@@ -18,7 +18,7 @@ export function Header() {
 
   const title = pathname.startsWith("/students/")
     ? "Student Profile"
-    : pageTitles[pathname] || "EduTrack";
+    : pageTitles[pathname] || "EduTrack Teacher";
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "short",

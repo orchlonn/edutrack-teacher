@@ -61,7 +61,7 @@ export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount, teacherNam
       <div className="flex h-14 items-center justify-between border-b border-border px-3">
         {!isCollapsed && (
           <Link href="/" className="text-lg font-bold text-gray-900">
-            EduTrack
+            EduTrack Teacher
           </Link>
         )}
         <button

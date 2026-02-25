@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduTrack - Teacher Dashboard",
+  title: "EduTrack Teacher",
   description: "School management dashboard for teachers. Track attendance, grades, and student progress.",
 };
 

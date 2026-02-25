@@ -235,7 +235,7 @@ const activitiesData = [
 
 // ─── Seed function ───────────────────────────────────
 async function seed() {
-  console.log("Seeding EduTrack database...\n");
+  console.log("Seeding EduTrack Teacher database...\n");
 
   // 1. Create auth user
   console.log("1. Creating auth user...");

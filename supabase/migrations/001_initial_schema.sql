@@ -1,5 +1,5 @@
 -- ================================================
--- EduTrack Initial Schema
+-- EduTrack Teacher Initial Schema
 -- ================================================
 
 -- 0. Extensions
