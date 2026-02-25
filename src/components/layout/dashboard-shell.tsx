@@ -8,9 +8,10 @@ import { Header } from "./header";
 interface DashboardShellProps {
   children: ReactNode;
   unreadCount: number;
+  teacherName: string;
 }
 
-export function DashboardShell({ children, unreadCount }: DashboardShellProps) {
+export function DashboardShell({ children, unreadCount, teacherName }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
@@ -19,6 +20,7 @@ export function DashboardShell({ children, unreadCount }: DashboardShellProps) {
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         unreadCount={unreadCount}
+        teacherName={teacherName}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />

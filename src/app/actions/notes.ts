@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { getCurrentTeacher } from "@/lib/db";
+import { getCurrentTeacher, logActivity } from "@/lib/db";
 
 export async function addNote(studentId: string, content: string) {
   const supabase = await createClient();
@@ -17,6 +17,8 @@ export async function addNote(studentId: string, content: string) {
     });
 
   if (error) throw new Error(error.message);
+
+  await logActivity(teacher.id, "Added a note for a student", "system");
 
   revalidatePath(`/students/${studentId}`);
 }

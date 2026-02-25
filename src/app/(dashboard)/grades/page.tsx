@@ -6,11 +6,13 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { GradeEntryTable } from "@/components/grades/grade-entry-table";
 import { GradeSummary } from "@/components/grades/grade-summary";
+import { ExamFormModal } from "@/components/grades/exam-form-modal";
 import { fetchClasses, fetchStudentsByClass, fetchExamsByClass, fetchGradeEntriesForExam } from "@/lib/supabase/queries";
 import { saveGrades, publishGrades } from "@/app/actions/grades";
+import { deleteExam } from "@/app/actions/exams";
 import { type Class, type Student, type Exam } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { Save, Send } from "lucide-react";
+import { Save, Send, Plus, Pencil, Trash2 } from "lucide-react";
 
 // ─── Reducer ─────────────────────────────────────────
 interface GradeState {
@@ -53,6 +55,9 @@ export default function GradesPage() {
   const [examList, setExamList] = useState<Exam[]>([]);
   const [selectedExamId, setSelectedExamId] = useState<string>("");
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showExamModal, setShowExamModal] = useState(false);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
+  const [showDeleteExam, setShowDeleteExam] = useState(false);
 
   const [state, dispatch] = useReducer(gradeReducer, {
     scores: {},
@@ -122,6 +127,24 @@ export default function GradesPage() {
     setShowPublishConfirm(false);
   }
 
+  function reloadExams() {
+    fetchExamsByClass(selectedClassId).then((exams) => {
+      setExamList(exams);
+      if (exams.length > 0) {
+        setSelectedExamId(exams[0].id);
+      } else {
+        setSelectedExamId("");
+      }
+    });
+  }
+
+  async function handleDeleteExam() {
+    if (!selectedExamId) return;
+    await deleteExam(selectedExamId);
+    setShowDeleteExam(false);
+    reloadExams();
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -140,6 +163,31 @@ export default function GradesPage() {
             value={selectedExamId}
             onChange={(e) => setSelectedExamId(e.target.value)}
           />
+        </div>
+        <div className="flex gap-1">
+          <Button size="sm" onClick={() => setShowExamModal(true)} title="New exam">
+            <Plus className="h-4 w-4" />
+          </Button>
+          {selectedExam && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingExam(selectedExam)}
+                title="Edit exam"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteExam(true)}
+                title="Delete exam"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -218,6 +266,41 @@ export default function GradesPage() {
         <p className="py-8 text-center text-gray-500">
           No exams found for this class. Create a new exam to start entering scores.
         </p>
+      )}
+
+      {showDeleteExam && selectedExam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-900">Delete Exam</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Are you sure you want to delete <span className="font-medium">{selectedExam.name}</span>?
+              This will also delete all associated grades.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowDeleteExam(false)}>
+                Cancel
+              </Button>
+              <Button variant="danger" size="sm" onClick={handleDeleteExam}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ExamFormModal
+        isOpen={showExamModal}
+        onClose={() => { setShowExamModal(false); reloadExams(); }}
+        classId={selectedClassId}
+      />
+
+      {editingExam && (
+        <ExamFormModal
+          isOpen={true}
+          onClose={() => { setEditingExam(null); reloadExams(); }}
+          classId={selectedClassId}
+          initialData={editingExam}
+        />
       )}
     </div>
   );

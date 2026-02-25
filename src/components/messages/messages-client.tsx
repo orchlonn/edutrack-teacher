@@ -3,19 +3,23 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { NewMessageModal } from "./new-message-modal";
 import { getRelativeTime } from "@/lib/utils";
-import { ArrowLeft, Send, User } from "lucide-react";
-import { type Message, type MessageItem } from "@/lib/types";
+import { ArrowLeft, Plus, Send, User } from "lucide-react";
+import { type Message, type MessageItem, type Student } from "@/lib/types";
 import { sendReply } from "@/app/actions/messages";
 
 interface MessagesClientProps {
   initialMessages: Message[];
+  teacherName: string;
+  students: Student[];
 }
 
-export function MessagesClient({ initialMessages }: MessagesClientProps) {
+export function MessagesClient({ initialMessages, teacherName, students }: MessagesClientProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState(initialMessages);
   const [reply, setReply] = useState("");
+  const [showNewMessage, setShowNewMessage] = useState(false);
 
   const selectedMessage = localMessages.find((m) => m.id === selectedId);
 
@@ -23,7 +27,7 @@ export function MessagesClient({ initialMessages }: MessagesClientProps) {
     if (!reply.trim() || !selectedId) return;
     const newItem: MessageItem = {
       id: `mt-${Date.now()}`,
-      senderName: "Ms. Johnson",
+      senderName: teacherName,
       content: reply.trim(),
       sentAt: new Date().toISOString(),
       isFromTeacher: true,
@@ -49,8 +53,11 @@ export function MessagesClient({ initialMessages }: MessagesClientProps) {
           selectedId ? "hidden" : "flex"
         }`}
       >
-        <div className="border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h3 className="text-sm font-semibold text-gray-900">Messages</h3>
+          <Button size="sm" onClick={() => setShowNewMessage(true)}>
+            <Plus className="h-4 w-4" /> New
+          </Button>
         </div>
         <div className="flex-1 overflow-y-auto">
           {localMessages.map((msg) => (
@@ -156,6 +163,11 @@ export function MessagesClient({ initialMessages }: MessagesClientProps) {
           </div>
         )}
       </div>
+      <NewMessageModal
+        isOpen={showNewMessage}
+        onClose={() => setShowNewMessage(false)}
+        students={students}
+      />
     </div>
   );
 }

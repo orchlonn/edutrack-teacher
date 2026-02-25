@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { calculateLetterGrade } from "@/lib/utils";
+import { getCurrentTeacher, logActivity } from "@/lib/db";
 
 export async function saveGrades(
   examId: string,
@@ -38,6 +39,9 @@ export async function saveGrades(
 
   if (error) throw new Error(error.message);
 
+  const teacher = await getCurrentTeacher();
+  await logActivity(teacher.id, `Saved grades for ${entries.length} students`, "grade");
+
   revalidatePath("/grades");
   revalidatePath("/");
 }
@@ -58,6 +62,10 @@ export async function publishGrades(examId: string) {
     .eq("exam_id", examId);
 
   if (gradeError) throw new Error(gradeError.message);
+
+  const teacher = await getCurrentTeacher();
+  const { data: examData } = await supabase.from("exams").select("name").eq("id", examId).single();
+  await logActivity(teacher.id, `Published grades for "${examData?.name ?? "exam"}"`, "grade");
 
   revalidatePath("/grades");
   revalidatePath("/");

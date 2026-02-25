@@ -7,7 +7,9 @@ import {
   ClipboardCheck,
   GraduationCap,
   Users,
+  UsersRound,
   BookOpen,
+  CalendarDays,
   MessageCircle,
   BarChart3,
   Settings,
@@ -20,6 +22,7 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   unreadCount: number;
+  teacherName: string;
 }
 
 const navItems = [
@@ -27,13 +30,22 @@ const navItems = [
   { href: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { href: "/grades", label: "Grades", icon: GraduationCap },
   { href: "/students", label: "Students", icon: Users },
+  { href: "/teachers", label: "Teachers", icon: UsersRound },
   { href: "/classes", label: "Classes", icon: BookOpen },
+  { href: "/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/messages", label: "Messages", icon: MessageCircle, badge: true },
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
-export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount }: SidebarProps) {
+export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount, teacherName }: SidebarProps) {
   const pathname = usePathname();
+
+  const initials = teacherName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -109,11 +121,10 @@ export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount }: SidebarP
         <div className="border-t border-border p-3">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-              MJ
+              {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-gray-900">Ms. Johnson</p>
-              <p className="truncate text-xs text-gray-500">7th Grade</p>
+              <p className="truncate text-sm font-medium text-gray-900">{teacherName}</p>
             </div>
           </div>
         </div>
@@ -122,7 +133,7 @@ export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount }: SidebarP
       {isCollapsed && (
         <div className="border-t border-border p-3 flex justify-center">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-            MJ
+            {initials}
           </div>
         </div>
       )}

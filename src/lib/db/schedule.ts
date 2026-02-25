@@ -28,3 +28,15 @@ export async function getTodaySchedule(): Promise<ScheduleItem[]> {
   const today = new Date().getDay();
   return getScheduleForDay(today);
 }
+
+export async function getWeekSchedule(): Promise<ScheduleItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("schedule_items")
+    .select("*")
+    .order("day_of_week")
+    .order("period");
+
+  if (error) throw error;
+  return (data ?? []).map(mapRow);
+}

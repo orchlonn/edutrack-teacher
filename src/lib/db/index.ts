@@ -1,7 +1,7 @@
 export { getCurrentTeacher } from "./teachers";
 export { getClasses, getClassById } from "./classes";
 export { getStudents, getStudentById, getStudentsByClass } from "./students";
-export { getScheduleForDay, getTodaySchedule } from "./schedule";
+export { getScheduleForDay, getTodaySchedule, getWeekSchedule } from "./schedule";
 export {
   getAttendanceForClassDate,
   getAttendanceForStudent,
@@ -19,4 +19,10 @@ export {
 export { getMessages, getMessagesForStudent, getUnreadMessageCount } from "./messages";
 export { getNotesForStudent } from "./notes";
 export { getActionItems } from "./actions";
-export { getActivities } from "./activities";
+export { getActivities, logActivity } from "./activities";
+export {
+  getAllTeachers,
+  getTeacherByIdAdmin,
+  getTeacherStats,
+  getTeacherDetailStats,
+} from "./teacher-directory";

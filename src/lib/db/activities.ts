@@ -10,6 +10,23 @@ function mapRow(row: Record<string, unknown>): Activity {
   };
 }
 
+export async function logActivity(
+  teacherId: string,
+  description: string,
+  type: Activity["type"],
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+    await supabase.from("activities").insert({
+      teacher_id: teacherId,
+      description,
+      type,
+    });
+  } catch {
+    // Logging should never break the calling action
+  }
+}
+
 export async function getActivities(): Promise<Activity[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

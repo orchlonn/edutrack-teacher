@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,10 @@ import {
   MessageCircle,
   AlertTriangle,
   ArrowRight,
+  Check,
 } from "lucide-react";
 import { type ActionItem } from "@/lib/types";
+import { toggleActionItem } from "@/app/actions/action-items";
 
 const iconMap = {
   attendance: ClipboardCheck,
@@ -30,7 +33,21 @@ interface ActionItemsProps {
 }
 
 export function ActionItems({ items }: ActionItemsProps) {
-  const pending = items.filter((i) => !i.isCompleted);
+  const [localItems, setLocalItems] = useState(items);
+  const [isPending, startTransition] = useTransition();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const pending = localItems.filter((i) => !i.isCompleted);
+
+  function handleToggle(id: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setPendingId(id);
+    setLocalItems((prev) => prev.filter((i) => i.id !== id));
+    startTransition(async () => {
+      await toggleActionItem(id, true);
+      setPendingId(null);
+    });
+  }
 
   if (pending.length === 0) {
     return (
@@ -51,6 +68,14 @@ export function ActionItems({ items }: ActionItemsProps) {
               href={item.link}
               className="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-gray-50"
             >
+              <button
+                onClick={(e) => handleToggle(item.id, e)}
+                disabled={isPending && pendingId === item.id}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-gray-300 text-gray-400 transition-colors hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer"
+                title="Mark as done"
+              >
+                <Check className="h-3 w-3" />
+              </button>
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
                 <Icon className="h-4 w-4 text-gray-600" />
               </div>

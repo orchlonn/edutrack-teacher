@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { getCurrentTeacher } from "@/lib/db";
+import { getCurrentTeacher, logActivity } from "@/lib/db";
 
 export async function createClass(data: {
   name: string;
@@ -22,6 +22,8 @@ export async function createClass(data: {
   });
 
   if (error) throw new Error(error.message);
+
+  await logActivity(teacher.id, `Created class "${data.name}"`, "system");
 
   revalidatePath("/classes");
   revalidatePath("/");
@@ -51,6 +53,9 @@ export async function updateClass(
 
 export async function deleteClass(classId: string) {
   const supabase = await createClient();
+  const teacher = await getCurrentTeacher();
+
+  const { data: cls } = await supabase.from("classes").select("name").eq("id", classId).single();
 
   const { error } = await supabase
     .from("classes")
@@ -59,12 +64,15 @@ export async function deleteClass(classId: string) {
 
   if (error) throw new Error(error.message);
 
+  await logActivity(teacher.id, `Deleted class "${cls?.name ?? "unknown"}"`, "system");
+
   revalidatePath("/classes");
   revalidatePath("/");
 }
 
 export async function addStudentToClass(classId: string, studentId: string) {
   const supabase = await createClient();
+  const teacher = await getCurrentTeacher();
 
   const { error } = await supabase.from("class_students").upsert(
     { class_id: classId, student_id: studentId },
@@ -72,6 +80,8 @@ export async function addStudentToClass(classId: string, studentId: string) {
   );
 
   if (error) throw new Error(error.message);
+
+  await logActivity(teacher.id, "Enrolled a student in a class", "system");
 
   revalidatePath("/classes");
   revalidatePath("/students");
@@ -82,6 +92,7 @@ export async function removeStudentFromClass(
   studentId: string
 ) {
   const supabase = await createClient();
+  const teacher = await getCurrentTeacher();
 
   const { error } = await supabase
     .from("class_students")
@@ -90,6 +101,8 @@ export async function removeStudentFromClass(
     .eq("student_id", studentId);
 
   if (error) throw new Error(error.message);
+
+  await logActivity(teacher.id, "Removed a student from a class", "system");
 
   revalidatePath("/classes");
   revalidatePath("/students");

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getCurrentTeacher, logActivity } from "@/lib/db";
 
 export async function saveAttendance(
   classId: string,
@@ -9,6 +10,7 @@ export async function saveAttendance(
   records: { studentId: string; status: string; note?: string }[]
 ) {
   const supabase = await createClient();
+  const teacher = await getCurrentTeacher();
 
   const { error } = await supabase
     .from("attendance_records")
@@ -24,6 +26,8 @@ export async function saveAttendance(
     );
 
   if (error) throw new Error(error.message);
+
+  await logActivity(teacher.id, `Recorded attendance for ${records.length} students on ${date}`, "attendance");
 
   revalidatePath("/attendance");
   revalidatePath("/");

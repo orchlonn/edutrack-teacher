@@ -31,31 +31,7 @@ export function TodaySchedule({ items }: TodayScheduleProps) {
   return (
     <Card title="Today's Schedule">
       <div className="space-y-1">
-        {[1, 2, 3, 4, 5, 6, 7].map((period) => {
-          const scheduleItem = items.find((s) => s.period === period);
-
-          if (!scheduleItem) {
-            if (period === 3) {
-              return (
-                <div key={period} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-400">
-                  <span className="w-6 text-center text-xs font-medium">P{period}</span>
-                  <span className="text-sm">10:00 AM</span>
-                  <span className="text-sm italic">Free Period</span>
-                </div>
-              );
-            }
-            if (period === 5) {
-              return (
-                <div key={period} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-400">
-                  <span className="w-6 text-center text-xs font-medium">P{period}</span>
-                  <span className="text-sm">12:00 PM</span>
-                  <span className="text-sm italic">Lunch</span>
-                </div>
-              );
-            }
-            return null;
-          }
-
+        {items.map((scheduleItem) => {
           const [startH, startM] = scheduleItem.startTime.split(":").map(Number);
           const [endH, endM] = scheduleItem.endTime.split(":").map(Number);
           const startMinutes = startH * 60 + startM;
@@ -66,7 +42,7 @@ export function TodaySchedule({ items }: TodayScheduleProps) {
 
           return (
             <Link
-              key={period}
+              key={scheduleItem.id}
               href="/attendance"
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
