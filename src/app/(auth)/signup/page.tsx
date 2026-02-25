@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -31,10 +33,31 @@ export default function SignupPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { name, subject },
+      },
     });
+
+    if (!error && data.user) {
+      // Create teacher record immediately (works when email confirmation is disabled)
+      // If email confirmation is enabled, the auth callback will handle it
+      const { error: insertError } = await supabase.from("teachers").upsert(
+        {
+          auth_id: data.user.id,
+          name,
+          email,
+          subject,
+        },
+        { onConflict: "auth_id" }
+      );
+      if (insertError) {
+        // Non-fatal: the auth callback will retry if needed
+        console.error("Could not create teacher record:", insertError.message);
+      }
+    }
 
     if (error) {
       setError(error.message);
@@ -80,6 +103,21 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
+              Full Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Jane Smith"
+            />
+          </div>
+
+          <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
               Email
             </label>
@@ -91,6 +129,21 @@ export default function SignupPage() {
               required
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="teacher@school.edu"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="subject" className="mb-1 block text-sm font-medium text-gray-700">
+              Subject
+            </label>
+            <input
+              id="subject"
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Mathematics"
             />
           </div>
 
