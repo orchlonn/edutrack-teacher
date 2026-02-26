@@ -117,22 +117,35 @@ export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount, teacherNam
       {/* Teacher info */}
       {!isCollapsed && (
         <div className="border-t border-border p-3">
-          <div className="flex items-center gap-3">
+          <Link
+            href="/profile"
+            className={cn(
+              "flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-gray-100",
+              isActive("/profile") && "bg-blue-50",
+            )}
+          >
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
               {initials}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-gray-900">{teacherName}</p>
+              <p className="text-xs text-gray-500">View profile</p>
             </div>
-          </div>
+          </Link>
         </div>
       )}
 
       {isCollapsed && (
         <div className="border-t border-border p-3 flex justify-center">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-            {initials}
-          </div>
+          <Link
+            href="/profile"
+            className="rounded-lg p-1 transition-colors hover:bg-gray-100"
+            title="View profile"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
+              {initials}
+            </div>
+          </Link>
         </div>
       )}
     </aside>

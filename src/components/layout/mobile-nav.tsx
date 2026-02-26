@@ -9,6 +9,7 @@ import {
   Users,
   BookOpen,
   MessageCircle,
+  UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/students", label: "Students", icon: Users },
   { href: "/classes", label: "Classes", icon: BookOpen },
   { href: "/messages", label: "Messages", icon: MessageCircle, badge: true },
+  { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
 export function MobileNav({ unreadCount }: { unreadCount: number }) {

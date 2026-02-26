@@ -11,6 +11,7 @@ const pageTitles: Record<string, string> = {
   "/messages": "Messages",
   "/reports": "Reports",
   "/settings": "Settings",
+  "/profile": "My Profile",
 };
 
 export function Header() {
