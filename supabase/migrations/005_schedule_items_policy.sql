@@ -12,6 +12,15 @@ create policy "Teachers manage schedule for own classes"
     )
   );
 
+-- Restrict classes to read-only for teachers.
+-- Class creation/editing is managed by admins, not teachers.
+
+drop policy "Teachers manage own classes" on classes;
+
+create policy "Teachers view own classes"
+  on classes for select
+  using (teacher_id = (select id from teachers where auth_id = auth.uid()));
+
 -- Restrict class_students to read-only for teachers.
 -- Student enrollment is managed by admins, not teachers.
 
