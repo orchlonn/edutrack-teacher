@@ -65,13 +65,19 @@ export default function GradesPage() {
     isPublished: false,
   });
 
-  // Load classes
+  // Load classes and auto-select first if none selected
   useEffect(() => {
-    fetchClasses().then(setClassList);
+    fetchClasses().then((classes) => {
+      setClassList(classes);
+      if (!selectedClassId && classes.length > 0) {
+        setSelectedClassId(classes[0].id);
+      }
+    });
   }, []);
 
   // Load students + exams when class changes
   useEffect(() => {
+    if (!selectedClassId) return;
     fetchStudentsByClass(selectedClassId).then(setStudentList);
     fetchExamsByClass(selectedClassId).then((exams) => {
       setExamList(exams);

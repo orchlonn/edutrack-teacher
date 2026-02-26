@@ -79,19 +79,25 @@ export default function AttendancePage() {
     isSaved: false,
   });
 
-  // Load classes
+  // Load classes and auto-select first if none selected
   useEffect(() => {
-    fetchClasses().then(setClassList);
+    fetchClasses().then((classes) => {
+      setClassList(classes);
+      if (!selectedClassId && classes.length > 0) {
+        setSelectedClassId(classes[0].id);
+      }
+    });
   }, []);
 
   // Load students when class changes
   useEffect(() => {
+    if (!selectedClassId) return;
     fetchStudentsByClass(selectedClassId).then(setStudentList);
   }, [selectedClassId]);
 
   // Load existing attendance when class/date changes
   useEffect(() => {
-    if (studentList.length === 0) return;
+    if (!selectedClassId || studentList.length === 0) return;
     fetchAttendanceForClassDate(selectedClassId, selectedDate).then((existing) => {
       const records: Record<string, AttendanceStatus> = {};
       for (const student of studentList) {

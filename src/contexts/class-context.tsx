@@ -13,7 +13,7 @@ interface ClassContextType {
 const ClassContext = createContext<ClassContextType | null>(null);
 
 export function ClassProvider({ children }: { children: ReactNode }) {
-  const [selectedClassId, setSelectedClassId] = useState("c1");
+  const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedDate, setSelectedDate] = useState(getToday());
 
   return (
