@@ -35,7 +35,12 @@ const navItems = [
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
-export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount, teacherName }: SidebarProps) {
+export function Sidebar({
+  isCollapsed,
+  onToggleCollapse,
+  unreadCount,
+  teacherName,
+}: SidebarProps) {
   const pathname = usePathname();
 
   const initials = teacherName
@@ -61,7 +66,8 @@ export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount, teacherNam
       <div className="flex h-14 items-center justify-between border-b border-border px-3">
         {!isCollapsed && (
           <Link href="/" className="text-lg font-bold text-gray-900">
-            EduTrack Teacher
+            EduTrack{" "}
+            <span className="text-sm font-normal text-gray-500">Teacher</span>
           </Link>
         )}
         <button
@@ -128,7 +134,9 @@ export function Sidebar({ isCollapsed, onToggleCollapse, unreadCount, teacherNam
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-gray-900">{teacherName}</p>
+              <p className="truncate text-sm font-medium text-gray-900">
+                {teacherName}
+              </p>
               <p className="text-xs text-gray-500">View profile</p>
             </div>
           </Link>
