@@ -1,15 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -31,38 +27,56 @@ export default function SignupPage() {
     }
 
     setLoading(true);
-
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name, subject },
-      },
-    });
 
-    if (!error && data.user) {
-      // Create teacher record immediately (works when email confirmation is disabled)
-      // If email confirmation is enabled, the auth callback will handle it
-      const { error: insertError } = await supabase.from("teachers").upsert(
-        {
-          auth_id: data.user.id,
-          name,
-          email,
-          subject,
-        },
-        { onConflict: "auth_id" }
-      );
-      if (insertError) {
-        // Non-fatal: the auth callback will retry if needed
-        console.error("Could not create teacher record:", insertError.message);
-      }
-    }
+    // 1. Check if this email was invited by a manager
+    const { data: invitation, error: rpcError } = await supabase.rpc(
+      "check_teacher_invitation",
+      { lookup_email: email.trim().toLowerCase() }
+    );
 
-    if (error) {
-      setError(error.message);
+    if (rpcError) {
+      setError("Something went wrong. Please try again.");
       setLoading(false);
       return;
+    }
+
+    if (!invitation?.exists) {
+      setError(
+        "This email is not registered in the system. Please contact your school administrator to be added first."
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (invitation?.has_account) {
+      setError("An account already exists for this email. Try signing in instead.");
+      setLoading(false);
+      return;
+    }
+
+    // 2. Create auth account
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
+    }
+
+    // 3. Link auth account to existing teacher record
+    if (data.user) {
+      const { error: claimError } = await supabase.rpc("claim_teacher_account", {
+        teacher_email: email.trim().toLowerCase(),
+        user_id: data.user.id,
+      });
+
+      if (claimError) {
+        console.error("Could not link teacher record:", claimError.message);
+      }
     }
 
     setSuccess(true);
@@ -98,25 +112,12 @@ export default function SignupPage() {
       <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900">EduTrack Teacher</h1>
-          <p className="mt-1 text-sm text-gray-500">Create your account</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Create your account using the email provided by your school
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Jane Smith"
-            />
-          </div>
-
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
               Email
@@ -129,21 +130,6 @@ export default function SignupPage() {
               required
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="teacher@school.edu"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="subject" className="mb-1 block text-sm font-medium text-gray-700">
-              Subject
-            </label>
-            <input
-              id="subject"
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Mathematics"
             />
           </div>
 
