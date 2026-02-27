@@ -29,6 +29,21 @@ export default function LoginPage() {
       return;
     }
 
+    // Verify the user has a teacher account before redirecting
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: account } = await supabase
+      .from("teachers")
+      .select("id")
+      .eq("auth_id", user!.id)
+      .single();
+
+    if (!account) {
+      await supabase.auth.signOut();
+      setError("No teacher account found for this email. This portal is for teachers only.");
+      setLoading(false);
+      return;
+    }
+
     router.push("/");
     router.refresh();
   }
