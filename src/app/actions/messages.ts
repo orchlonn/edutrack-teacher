@@ -8,6 +8,16 @@ export async function sendReply(messageId: string, content: string) {
   const supabase = await createClient();
   const teacher = await getCurrentTeacher();
 
+  // Verify this thread belongs to the current teacher
+  const { data: thread } = await supabase
+    .from("messages")
+    .select("id")
+    .eq("id", messageId)
+    .eq("teacher_id", teacher.id)
+    .single();
+
+  if (!thread) throw new Error("Message thread not found");
+
   const { error: itemError } = await supabase
     .from("message_items")
     .insert({
@@ -15,6 +25,7 @@ export async function sendReply(messageId: string, content: string) {
       sender_name: teacher.name,
       content,
       is_from_teacher: true,
+      sender_role: "teacher",
     });
 
   if (itemError) throw new Error(itemError.message);
@@ -25,8 +36,10 @@ export async function sendReply(messageId: string, content: string) {
     .update({
       last_message_at: new Date().toISOString(),
       is_read: true,
+      is_read_parent: false,
     })
-    .eq("id", messageId);
+    .eq("id", messageId)
+    .eq("teacher_id", teacher.id);
 
   if (msgError) throw new Error(msgError.message);
 
@@ -52,6 +65,7 @@ export async function createMessage(data: {
       student_id: data.studentId,
       subject: data.subject,
       is_read: true,
+      is_read_parent: false,
       last_message_at: new Date().toISOString(),
     })
     .select("id")
@@ -66,6 +80,7 @@ export async function createMessage(data: {
       sender_name: teacher.name,
       content: data.content,
       is_from_teacher: true,
+      sender_role: "teacher",
     });
 
   if (itemError) throw new Error(itemError.message);
@@ -78,11 +93,13 @@ export async function createMessage(data: {
 
 export async function markMessageRead(messageId: string) {
   const supabase = await createClient();
+  const teacher = await getCurrentTeacher();
 
   const { error } = await supabase
     .from("messages")
     .update({ is_read: true })
-    .eq("id", messageId);
+    .eq("id", messageId)
+    .eq("teacher_id", teacher.id);
 
   if (error) throw new Error(error.message);
 

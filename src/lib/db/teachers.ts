@@ -16,31 +16,14 @@ export async function getCurrentTeacher(): Promise<Teacher> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("teachers")
     .select("*")
     .eq("auth_id", user.id)
     .single();
 
-  // Auto-create teacher record if missing (handles users who signed up before this fix)
   if (error || !data) {
-    const meta = user.user_metadata ?? {};
-    const { data: created, error: insertError } = await supabase
-      .from("teachers")
-      .upsert(
-        {
-          auth_id: user.id,
-          name: meta.name || user.email?.split("@")[0] || "Teacher",
-          email: user.email!,
-          subject: meta.subject || "General",
-        },
-        { onConflict: "auth_id" }
-      )
-      .select()
-      .single();
-
-    if (insertError || !created) throw new Error("Teacher record not found");
-    data = created;
+    throw new Error("Not authorized as a teacher");
   }
 
   return mapRow(data);
